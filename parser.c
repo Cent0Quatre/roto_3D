@@ -3,25 +3,12 @@
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include "parser.h"
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf.h"
 
 #define EPSILON 0.00001
-#define MAX_VERTICES 1000
-
-// Structure pour stocker les vertices uniques
-typedef struct {
-    float x, y, z;
-} Vertex;
-
-// Structure pour stocker les données du modèle
-typedef struct {
-    Vertex* unique_vertices;
-    size_t unique_vertices_count;
-    unsigned int* indices;
-    size_t indices_count;
-} GLBData;
 
 // Fonction pour vérifier si deux vertices sont presque identiques
 int are_vertices_equal(Vertex v1, Vertex v2) {
@@ -138,35 +125,4 @@ void free_glb_data(GLBData* data) {
     data->indices = NULL;
     data->unique_vertices_count = 0;
     data->indices_count = 0;
-}
-
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <fichier.glb>\n", argv[0]);
-        return 1;
-    }
-    
-    GLBData parsed_data = parse_glb_file(argv[1]);
-    
-    // Afficher les vertices uniques
-    printf("Vertices Uniques (%zu):\n", parsed_data.unique_vertices_count);
-    for (size_t i = 0; i < parsed_data.unique_vertices_count; i++) {
-        printf("  Vertex %zu: (%.6f, %.6f, %.6f)\n", 
-               i,
-               parsed_data.unique_vertices[i].x, 
-               parsed_data.unique_vertices[i].y, 
-               parsed_data.unique_vertices[i].z);
-    }
-    
-    // Afficher les indices réactualisés
-    printf("\nIndices (%zu):\n", parsed_data.indices_count);
-    for (size_t i = 0; i < parsed_data.indices_count; i++) {
-        printf("%u ", parsed_data.indices[i]);
-        if ((i + 1) % 3 == 0) printf("\n");
-    }
-    
-    // Libérer la mémoire
-    free_glb_data(&parsed_data);
-    
-    return 0;
 }
