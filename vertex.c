@@ -1,57 +1,82 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "parser.h"
 
-// Structure représentant un vertex en 3D
-typedef struct {
-    float x, y, z;
-} Vertex;
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <fichier.glb>\n", argv[0]);
+        return 1;
+    }
 
-int main() {
-    Vertex vertices[3] = {
-        {1.0f, 2.0f, 3.0f},  // Vertex 1 (x = 1, y = 2, z = 3)
-        {4.0f, 5.0f, 6.0f},  // Vertex 2 (x = 4, y = 5, z = 6)
-        {0.0f, 3.0f, 2.0f}   // Vertex 3 (x = 7, y = 8, z = 9)
-    };
+    GLBData modelGeo = parse_glb_file(argv[1]);
+    size_t vertices = modelGeo.unique_vertices_count;
 
-    float rotA = 0, rotB = 0; // Angles de rotation
-    int lX = 60, lY = 20; // Dimension du buffer
-    int scale = fmin(0.68 * lX / 2, 0.68 * lY); // .68 ratio max pour rester dans le cadre entièrement; /2 car *2 plus x
-    float angleX, angleY;
+    float rotA = 0, rotB = 0, rotC = 0; // Angles de rotation
+    int lX = 50, lY = 20; // Dimensions du buffer
+    int scale = fmin(0.40 * lX / 2, 0.40 * lY);
     char buffer[lX * lY];
     float bufferZ[lX * lY * 4];
-    float cam_depth = 5.5; // distance de cam à l'objet
-
-    printf("\033[?25l"); // Désactiver le curseur
+    float D = 3; // Distance de l'objet à la caméra
+    
+    printf("\033[?25l"); // Désactive le curseur
 
     printf("\x1b[2J"); // Efface l'écran
     for (;;) {
         // A chaque génération
-        memset(buffer, 32, lX * lY); // Initialise le buffer avec des espaces
-        memset(bufferZ, 0, lX * lY * 4);  // Initialise le buffer de depth à 0
+        memset(buffer, 32, lX * lY);
+        memset(bufferZ, 0, lX * lY * 4);
 
-        for (int i = 0; i < 3; i++) {
-            float px = vertices[i].x, py = vertices[i].y, pz = vertices[i].z;
+        float sinA = sin(rotA), cosA = cos(rotA);
+        float sinB = sin(rotB), cosB = cos(rotB);
+        float sinC = sin(rotC), cosC = cos(rotC);
 
-            // centré sur le buffer
-            int x = lX / 2 + 2 * ((px * cam_depth) / pz);
-            int y = lY / 2 + (py * cam_depth) / pz;
+        for (int i = 0; i < vertices; i++) {
+            float x = modelGeo.unique_vertices[i].x, y = modelGeo.unique_vertices[i].y, z = modelGeo.unique_vertices[i].z;
+
+            // Rotation X
+            float y1 = y * cosA - z * sinA;
+            float z1 = y * sinA + z * cosA;
+            y = y1;
+            z = z1;
+
+            // Rotation Y
+            float x2 = x * cosB + z * sinB;
+            float z2 = -x * sinB + z * cosB;
+            x = x2;
+            z = z2;
+
+            // Rotation Z
+            float x3 = x * cosC - y * sinC;
+            float y3 = x * sinC + y * cosC;
+            x = x3;
+            y = y3;
+
+            int screenX = lX / 2 + 2 * (scale * x / (D - z));
+            int screenY = lY / 2 + (scale * y / (D - z));
             
-            // produit vectoriel avec (0, 1, -1) notre source de lumière
-            int bright = py - pz;
-            int j = x + lX * y;
-            // Si dans le buffer et si un point visible ("rangé le plus devant")
-            if (lY > y && y > 0 && x > 0 && lX > x) {
-                buffer[j] = ".,-~:;=!*#$@"[bright > 0 ? bright : 0];
+            int j = screenX + lX * screenY;
+            // Si le point est dans le cadre du buffer
+            if (z-D < 0 && screenY >= 0 && screenY < lY && screenX >= 0 && screenX < lX) {
+                float depth = sqrtf(x*x + y*y + (z-D)*(z-D));
+                if (depth < bufferZ[j] || bufferZ[j] == 0) {
+                    bufferZ[j] = depth;
+                    int bright = 11 - (int)(depth);
+                    if (bright < 0) bright = 0;
+                    if (bright > 11) bright = 11;
+                    buffer[j] = ".,-~:;=!*#$@"[bright];
+                }
             }
-        }     
-
-        printf("\x1b[H"); // Replace le curseur en haut à gauche
-        for (int i = 0; lX * lY >= i; i++) {
-            putchar(i % lX ? buffer[i] : 10); // Affiche le buffer
-            rotA += 0.00002;
-            rotB += 0.00002;
         }
+
+        printf("\x1b[H");
+        for (int i = 0; i < lX * lY; i++) {
+            putchar(i % lX ? buffer[i] : 10);
+        }
+        
+        rotA += 0.02;
+        rotB += 0.03;
+        rotC += 0.01;
     }
     return 0;
 }
