@@ -12,9 +12,7 @@
 
 // Fonction pour vérifier si deux vertices sont presque identiques
 int are_vertices_equal(Vertex v1, Vertex v2) {
-    return (fabs(v1.x - v2.x) < EPSILON &&
-            fabs(v1.y - v2.y) < EPSILON &&
-            fabs(v1.z - v2.z) < EPSILON);
+    return (fabs(v1.x - v2.x) < EPSILON && fabs(v1.y - v2.y) < EPSILON && fabs(v1.z - v2.z) < EPSILON);
 }
 
 // Trouver ou ajouter un vertex unique
@@ -87,9 +85,7 @@ GLBData parse_glb_file(const char* filename) {
         cgltf_accessor_read_float(pos_accessor, i, &v.x, 3);
         
         // Trouver ou ajouter le vertex unique
-        int new_index = find_or_add_vertex(result.unique_vertices, 
-                                           &result.unique_vertices_count, 
-                                           v);
+        int new_index = find_or_add_vertex(result.unique_vertices, &result.unique_vertices_count, v);
     }
     
     // Traiter les indices
