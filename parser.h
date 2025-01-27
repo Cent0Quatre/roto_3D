@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#define MAX_VERTICES 1000
+#define MAX_VERTICES 100000
 
 // Structure pour stocker les vertices uniques
 typedef struct {
