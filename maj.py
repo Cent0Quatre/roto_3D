@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-def compile_and_run(c_file, c_file_2, output_file, model):
+def compile_and_run(c_file, c_file_2, c_file_3, output_file, model):
     try:
         # Supprimer le fichier .exe s'il existe
         if os.path.exists(output_file):
@@ -9,7 +9,7 @@ def compile_and_run(c_file, c_file_2, output_file, model):
             print(f"\nFichier {output_file} supprimé.")
         
         # Compiler le fichier .c
-        compile_command = f"gcc {c_file} {c_file_2} -o {output_file}"
+        compile_command = f"gcc {c_file} {c_file_2} {c_file_3} -o {output_file}"
         compile_process = subprocess.run(compile_command, shell=True, text=True, capture_output=True)
         
         if compile_process.returncode != 0:
@@ -30,7 +30,8 @@ def compile_and_run(c_file, c_file_2, output_file, model):
 # Fichier source et fichier de sortie
 c_file = "vertex.c"
 c_file_2 = "parser.c"
+c_file_3 = "raster.c"
+model = "./models/monk.glb"
 output_file = "vertex.exe"
-model = "./models/cylinder.glb"
 
-compile_and_run(c_file, c_file_2, output_file, model)
+compile_and_run(c_file, c_file_2, c_file_3, output_file, model)
